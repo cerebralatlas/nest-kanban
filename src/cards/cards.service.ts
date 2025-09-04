@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../logger/logger.service';
 import { PermissionsService } from '../permissions/permissions.service';
+import { Inject, forwardRef } from '@nestjs/common';
+import { SearchService } from '../search/search.service';
 import {
   CreateCardDto,
   UpdateCardDto,
@@ -21,6 +23,8 @@ export class CardsService {
     private prisma: PrismaService,
     private logger: LoggerService,
     private permissionsService: PermissionsService,
+    @Inject(forwardRef(() => SearchService))
+    private searchService: SearchService,
   ) {}
 
   async create(listId: string, userId: string, createCardDto: CreateCardDto) {
@@ -80,6 +84,11 @@ export class CardsService {
         boardId,
         assignedToSelf: assignToSelf,
         order: newOrder,
+      });
+
+      // 同步到 Elasticsearch
+      await this.searchService.indexCard(card).catch(error => {
+        this.logger.logError(error, 'sync_card_to_es', userId);
       });
 
       return {

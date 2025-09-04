@@ -8,6 +8,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../logger/logger.service';
 import { PermissionsService } from '../permissions/permissions.service';
+import { Inject, forwardRef } from '@nestjs/common';
+import { SearchService } from '../search/search.service';
 import { 
   CreateWorkspaceDto, 
   UpdateWorkspaceDto, 
@@ -23,6 +25,8 @@ export class WorkspacesService {
     private prisma: PrismaService,
     private logger: LoggerService,
     private permissionsService: PermissionsService,
+    @Inject(forwardRef(() => SearchService))
+    private searchService: SearchService,
   ) {}
 
   async create(userId: string, createWorkspaceDto: CreateWorkspaceDto) {
@@ -82,6 +86,11 @@ export class WorkspacesService {
         workspaceId: workspace.id,
         workspaceName: name,
         slug,
+      });
+
+      // 同步到 Elasticsearch
+      await this.searchService.indexWorkspace(workspace).catch(error => {
+        this.logger.logError(error, 'sync_workspace_to_es', userId);
       });
 
       return {

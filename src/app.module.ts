@@ -8,10 +8,11 @@ import { LoggerModule } from './logger/logger.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { BoardsModule } from './boards/boards.module';
+import { ListsModule } from './lists/lists.module';
 import { LoggingInterceptor } from './logger/logger.interceptor';
 
 @Module({
-  imports: [LoggerModule, PrismaModule, PermissionsModule, AuthModule, WorkspacesModule, BoardsModule],
+  imports: [LoggerModule, PrismaModule, PermissionsModule, AuthModule, WorkspacesModule, BoardsModule, ListsModule],
   controllers: [AppController],
   providers: [
     AppService,

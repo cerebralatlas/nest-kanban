@@ -5,10 +5,11 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggerModule } from './logger/logger.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 import { LoggingInterceptor } from './logger/logger.interceptor';
 
 @Module({
-  imports: [LoggerModule, PrismaModule, AuthModule],
+  imports: [LoggerModule, PrismaModule, AuthModule, WorkspacesModule],
   controllers: [AppController],
   providers: [
     AppService,

@@ -40,8 +40,9 @@ export function createLoggerConfig(): LoggerOptions {
           colorize: true,
           translateTime: 'yyyy-mm-dd HH:MM:ss.l',
           ignore: 'pid,hostname',
-          messageFormat: '{levelLabel} - {msg}',
+          messageFormat: '{msg}',
           levelFirst: true,
+          singleLine: false,
         },
       },
     };

@@ -22,13 +22,13 @@ export class LoggingInterceptor implements NestInterceptor {
     const userId = request.user?.id;
 
     // 记录请求开始
-    this.logger.debug('Incoming request', {
+    this.logger.getLogger().debug({
       method,
       url,
       userAgent,
       userId,
       body: this.sanitizeBody(body),
-    });
+    }, 'Incoming request');
 
     return next.handle().pipe(
       tap((data) => {

@@ -26,23 +26,47 @@ export class LoggerService implements NestLoggerService {
 
   // NestJS LoggerService 接口实现
   log(message: any, context?: string) {
-    this.logger.info({ context }, message);
+    if (context) {
+      this.logger.info({ context }, message);
+    } else {
+      this.logger.info(message);
+    }
   }
 
   error(message: any, trace?: string, context?: string) {
-    this.logger.error({ context, trace }, message);
+    const meta: any = {};
+    if (context) meta.context = context;
+    if (trace) meta.trace = trace;
+    
+    if (Object.keys(meta).length > 0) {
+      this.logger.error(meta, message);
+    } else {
+      this.logger.error(message);
+    }
   }
 
   warn(message: any, context?: string) {
-    this.logger.warn({ context }, message);
+    if (context) {
+      this.logger.warn({ context }, message);
+    } else {
+      this.logger.warn(message);
+    }
   }
 
   debug(message: any, context?: string) {
-    this.logger.debug({ context }, message);
+    if (context) {
+      this.logger.debug({ context }, message);
+    } else {
+      this.logger.debug(message);
+    }
   }
 
   verbose(message: any, context?: string) {
-    this.logger.trace({ context }, message);
+    if (context) {
+      this.logger.trace({ context }, message);
+    } else {
+      this.logger.trace(message);
+    }
   }
 
   // 扩展的日志方法

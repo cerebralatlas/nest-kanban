@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, Get, UseGuards, UseInterceptors } from '@nestjs/common';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -6,20 +6,28 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiUnauthorizedResponse,
-  ApiConflictResponse 
+  ApiConflictResponse,
+  ApiTooManyRequestsResponse 
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../guards';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { RateLimitGuard } from '../security/guards/rate-limit.guard';
+import { RequestValidationGuard } from '../security/guards/request-validation.guard';
+import { InputSanitizationInterceptor } from '../security/interceptors/input-sanitization.interceptor';
+import { AuthRateLimit } from '../security/decorators/rate-limit.decorator';
 
 @ApiTags('auth')
+@UseGuards(RequestValidationGuard, RateLimitGuard)
+@UseInterceptors(InputSanitizationInterceptor)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @AuthRateLimit()
   @ApiOperation({ 
     summary: '用户注册', 
     description: '创建新用户账户' 
@@ -48,11 +56,15 @@ export class AuthController {
   @ApiConflictResponse({ 
     description: '用户邮箱或用户名已存在' 
   })
+  @ApiTooManyRequestsResponse({
+    description: '注册尝试过于频繁，请稍后再试'
+  })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
+  @AuthRateLimit()
   @ApiOperation({ 
     summary: '用户登录', 
     description: '使用邮箱或用户名登录' 
@@ -81,6 +93,9 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({ 
     description: '用户名或密码错误' 
+  })
+  @ApiTooManyRequestsResponse({
+    description: '登录尝试过于频繁，请15分钟后再试'
   })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);

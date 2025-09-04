@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../logger/logger.service';
+import { PermissionsService } from '../permissions/permissions.service';
 import { 
   CreateWorkspaceDto, 
   UpdateWorkspaceDto, 
@@ -21,6 +22,7 @@ export class WorkspacesService {
   constructor(
     private prisma: PrismaService,
     private logger: LoggerService,
+    private permissionsService: PermissionsService,
   ) {}
 
   async create(userId: string, createWorkspaceDto: CreateWorkspaceDto) {
@@ -162,7 +164,7 @@ export class WorkspacesService {
 
   async findOne(workspaceId: string, userId: string) {
     // 检查用户是否有访问权限
-    await this.checkWorkspaceAccess(workspaceId, userId);
+    await this.permissionsService.assertWorkspacePermission(userId, workspaceId, 'read');
 
     const workspace = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
@@ -228,7 +230,7 @@ export class WorkspacesService {
 
   async update(workspaceId: string, userId: string, updateWorkspaceDto: UpdateWorkspaceDto) {
     // 检查用户是否是工作区所有者
-    await this.checkWorkspaceOwnership(workspaceId, userId);
+    await this.permissionsService.assertWorkspaceOwnership(userId, workspaceId);
 
     const { slug, ...updateData } = updateWorkspaceDto;
 
@@ -285,7 +287,7 @@ export class WorkspacesService {
 
   async remove(workspaceId: string, userId: string) {
     // 检查用户是否是工作区所有者
-    await this.checkWorkspaceOwnership(workspaceId, userId);
+    await this.permissionsService.assertWorkspaceOwnership(userId, workspaceId);
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -331,7 +333,7 @@ export class WorkspacesService {
   // 成员管理方法
   async inviteMember(workspaceId: string, userId: string, inviteMemberDto: InviteMemberDto) {
     // 检查用户是否有邀请权限（OWNER）
-    await this.checkWorkspaceOwnership(workspaceId, userId);
+    await this.permissionsService.assertWorkspaceOwnership(userId, workspaceId);
 
     const { email, role } = inviteMemberDto;
 
@@ -396,7 +398,7 @@ export class WorkspacesService {
 
   async getMembers(workspaceId: string, userId: string, query: WorkspaceQueryDto) {
     // 检查用户是否有访问权限
-    await this.checkWorkspaceAccess(workspaceId, userId);
+    await this.permissionsService.assertWorkspacePermission(userId, workspaceId, 'read');
 
     const { search, page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
@@ -449,7 +451,7 @@ export class WorkspacesService {
 
   async updateMember(workspaceId: string, targetUserId: string, userId: string, updateMemberDto: UpdateMemberDto) {
     // 检查用户是否是工作区所有者
-    await this.checkWorkspaceOwnership(workspaceId, userId);
+    await this.permissionsService.assertWorkspaceOwnership(userId, workspaceId);
 
     // 不能修改所有者的角色
     const workspace = await this.prisma.workspace.findUnique({
@@ -515,7 +517,7 @@ export class WorkspacesService {
 
   async removeMember(workspaceId: string, targetUserId: string, userId: string) {
     // 检查用户是否是工作区所有者
-    await this.checkWorkspaceOwnership(workspaceId, userId);
+    await this.permissionsService.assertWorkspaceOwnership(userId, workspaceId);
 
     // 不能移除所有者
     const workspace = await this.prisma.workspace.findUnique({
@@ -564,38 +566,4 @@ export class WorkspacesService {
     }
   }
 
-  // 权限检查辅助方法
-  private async checkWorkspaceAccess(workspaceId: string, userId: string) {
-    const member = await this.prisma.workspaceMember.findUnique({
-      where: {
-        userId_workspaceId: {
-          userId,
-          workspaceId,
-        }
-      }
-    });
-
-    if (!member) {
-      throw new ForbiddenException('无权访问此工作区');
-    }
-
-    return member;
-  }
-
-  private async checkWorkspaceOwnership(workspaceId: string, userId: string) {
-    const workspace = await this.prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { ownerId: true }
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('工作区不存在');
-    }
-
-    if (workspace.ownerId !== userId) {
-      throw new ForbiddenException('只有工作区所有者可以执行此操作');
-    }
-
-    return workspace;
-  }
 }

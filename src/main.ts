@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { createFastifyAdapter } from './config/fastify.config';
 import { LoggerService } from './logger/logger.service';
+import { setupSwagger } from './config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -31,10 +32,14 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // 设置 Swagger 文档
+  setupSwagger(app);
+
   const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
   await app.listen(port, '0.0.0.0');
   
   logger.log(`🚀 Application is running on: http://localhost:${port}`, 'Bootstrap');
+  logger.log(`📚 Swagger API documentation: http://localhost:${port}/api-docs`, 'Bootstrap');
 }
 
 bootstrap().catch((error) => {

@@ -55,8 +55,8 @@ export class RequestValidationGuard implements CanActivate {
         endpoint: `${request.method} ${request.url}`,
       });
       
-      // 可以选择是否拒绝没有 User-Agent 的请求
-      // throw new BadRequestException('缺少 User-Agent 头');
+      // 拒绝没有 User-Agent 的请求
+      throw new BadRequestException('缺少 User-Agent 头');
     }
 
     // 检测已知的恶意 User-Agent 模式

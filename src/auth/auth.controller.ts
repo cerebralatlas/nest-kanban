@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe, Get, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -16,12 +16,9 @@ import { JwtAuthGuard } from '../guards';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { RateLimitGuard } from '../security/guards/rate-limit.guard';
 import { RequestValidationGuard } from '../security/guards/request-validation.guard';
-import { InputSanitizationInterceptor } from '../security/interceptors/input-sanitization.interceptor';
 import { AuthRateLimit } from '../security/decorators/rate-limit.decorator';
-
 @ApiTags('auth')
 @UseGuards(RequestValidationGuard, RateLimitGuard)
-@UseInterceptors(InputSanitizationInterceptor)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

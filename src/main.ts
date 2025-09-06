@@ -30,6 +30,8 @@ async function bootstrap() {
   await app.register(require('@fastify/cors'), {
     origin: true,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // 设置 Swagger 文档

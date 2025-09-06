@@ -32,8 +32,8 @@ import { InputSanitizationInterceptor } from './security/interceptors/input-sani
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(SecurityHeadersMiddleware)
-      .forRoutes('*');
+    // consumer
+    //   .apply(SecurityHeadersMiddleware)
+    //   .forRoutes('*');
   }
 }
